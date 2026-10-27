@@ -1,8 +1,9 @@
 
 import { Router } from "express";
 
-
 import { apiKeyAuth } from "../middleware/api-key-auth.js";
+import { authorize } from "../middleware/authorize.js";
+
 import { createApiKey } from "../services/api-key-service.js";
 import { revokeApiKey } from "../services/api-key-revocation-service.js";
 
@@ -13,6 +14,9 @@ const UUID_PATTERN =
 
 // All key-management routes require authentication.
 router.use(apiKeyAuth);
+
+// Only ADMIN and CLIENT roles can manage their own API keys.
+router.use(authorize("ADMIN", "CLIENT"));
 
 // Create an API key for the authenticated client.
 router.post("/", async (req, res, next) => {
