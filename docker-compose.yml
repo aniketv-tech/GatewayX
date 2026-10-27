@@ -1,0 +1,50 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: gatewayx-postgres
+    environment:
+      POSTGRES_DB: gatewayx
+      POSTGRES_USER: gatewayx
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local_dev_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gatewayx -d gatewayx"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis-cache:
+    image: redis:7-alpine
+    container_name: gatewayx-redis-cache
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_cache_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis-queue:
+    image: redis:7-alpine
+    container_name: gatewayx-redis-queue
+    command: redis-server --appendonly yes --maxmemory-policy noeviction
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_queue_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres_data:
+  redis_cache_data:
+  redis_queue_data:
