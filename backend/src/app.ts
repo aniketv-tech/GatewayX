@@ -1,7 +1,7 @@
 
 import "dotenv/config";
 import express from "express";
-
+import { connectRedis } from "./config/redis.js";
 import { logger } from "./config/logger.js";
 import { pool } from "./config/database.js";
 
@@ -62,9 +62,20 @@ app.use(errorHandler);
 // --------------------------------------------------
 // Start the backend server
 // --------------------------------------------------
-app.listen(PORT, () => {
-  logger.info(
-    { port: PORT },
-    "GatewayX backend started",
-  );
-});
+async function startServer(): Promise<void> {
+  try {
+    await connectRedis();
+
+    app.listen(PORT, () => {
+      logger.info(
+        { port: PORT },
+        "GatewayX backend started",
+      );
+    });
+  } catch (error) {
+    logger.error({ error }, "Failed to start GatewayX backend");
+    process.exit(1);
+  }
+}
+
+void startServer();
